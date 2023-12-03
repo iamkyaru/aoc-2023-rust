@@ -58,8 +58,22 @@ fn algorithm<I: Iterator<Item = char>>(mut iter: I, buffer: &mut Vec<char>) -> O
     }
 }
 
-fn new_algo() {
-    todo!()
+const WORDS: [&str; 9] = [
+    "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
+];
+
+fn new_algo(line: &str) {
+    let mut line = line.to_string();
+
+    WORDS.into_iter().for_each(|word| {
+        if let Some(idx) = line.find(word) {
+            let digit_char = word_to_digit(word)
+                .map(|digit| digit as u32)
+                .and_then(|digit| char::from_digit(digit, 10))
+                .unwrap();
+            line.insert(idx, digit_char);
+        }
+    });
 }
 
 fn word_to_digit(word: &str) -> Option<usize> {
