@@ -23,57 +23,38 @@ pub fn solve2(input: &str) -> usize {
     let mut calibration_value = 0;
 
     for line in input.lines() {
-        calibration_value += solve_mixed(line).unwrap_or(0);
+        calibration_value += new_algo(line);
     }
 
     calibration_value
-}
-
-fn solve_mixed(line: &str) -> Option<usize> {
-    let mut value = 0;
-
-    let mut buffer = Vec::new();
-
-    value += algorithm(line.chars(), &mut buffer)? * 10;
-    value += algorithm(line.chars().rev(), &mut buffer)?;
-
-    Some(value)
-}
-
-fn algorithm<I: Iterator<Item = char>>(mut iter: I, buffer: &mut Vec<char>) -> Option<usize> {
-    loop {
-        if let Some(c) = iter.next() {
-            if buffer.len() >= 3 {
-                let word = buffer.drain(..).collect::<String>();
-            }
-
-            if c.is_ascii_digit() {
-                let word = buffer.drain(..).collect::<String>();
-
-                break word_to_digit(&word).or_else(|| c.to_digit(10).map(|digit| digit as usize));
-            }
-
-            buffer.push(c);
-        }
-    }
 }
 
 const WORDS: [&str; 9] = [
     "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
 ];
 
-fn new_algo(line: &str) {
+fn new_algo(line: &str) -> usize {
     let mut line = line.to_string();
 
-    WORDS.into_iter().for_each(|word| {
-        if let Some(idx) = line.find(word) {
-            let digit_char = word_to_digit(word)
-                .map(|digit| digit as u32)
-                .and_then(|digit| char::from_digit(digit, 10))
-                .unwrap();
-            line.insert(idx, digit_char);
-        }
+    WORDS.into_iter().for_each(|word| loop {
+        let idx = match line.find(word) {
+            Some(idx) => idx,
+            _ => break,
+        };
+
+        let digit_char = word_to_digit(word)
+            .map(|digit| digit as u32)
+            .and_then(|digit| char::from_digit(digit, 10))
+            .unwrap();
+        line.insert(idx + 1, digit_char);
     });
+
+    line.chars()
+        .find(is_calibration_value)
+        .zip(line.chars().rfind(is_calibration_value))
+        .and_then(|(left, right)| left.to_digit(10).zip(right.to_digit(10)))
+        .map(|(left, right)| left * 10 + right)
+        .unwrap() as usize
 }
 
 fn word_to_digit(word: &str) -> Option<usize> {
